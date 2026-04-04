@@ -1,6 +1,3 @@
-// dashboard/Dashboard.jsx
-// Full-page monthly statement. Opens in a new tab from the popup footer.
-// All data comes from getMonthlyStatement() — no additional storage calls in sub-components.
 
 import { useState, useEffect } from 'react';
 import {
@@ -9,6 +6,7 @@ import {
   getCategoryColor,
   getCategoryLabel,
 } from '../utils/dollar-engine.js';
+import { buildBehaviorProfile } from '../utils/profile-engine.js';
 import { seedDemoData } from '../utils/seed-data.js';
 
 // ---------------------------------------------------------------------------
@@ -16,19 +14,29 @@ import { seedDemoData } from '../utils/seed-data.js';
 // ---------------------------------------------------------------------------
 export default function Dashboard() {
   const [statement, setStatement] = useState(null);
+  const [profile, setProfile] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMonthlyStatement().then((data) => {
+    async function load() {
+      const data = await getMonthlyStatement();
+      const profileData = await buildBehaviorProfile();
+
       setStatement(data);
+      setProfile(profileData);
       setLoading(false);
-    });
+    }
+
+    load();
   }, []);
 
   async function loadDemoData() {
     await seedDemoData();
     const data = await getMonthlyStatement();
+    const profileData = await buildBehaviorProfile();
+
     setStatement(data);
+    setProfile(profileData);
   }
 
   if (loading) return <LoadingScreen />;
@@ -41,6 +49,7 @@ export default function Dashboard() {
       <AnnualProjectionCard annualProjection={statement.annualProjection} />
       <ConsumerEquivalentsCard equivalents={statement.consumerEquivalents} />
       <ExposureTierCard tier={statement.exposureTier} />
+      <MirrorSection profile={profile} />
       <PlatformBreakdown byPlatform={statement.byPlatform} total={statement.totalValue} />
       <CategoryBreakdown byCategory={statement.byCategory} total={statement.totalValue} />
       <TopSites sites={statement.topSites} />
@@ -150,6 +159,88 @@ function ExposureTierCard({ tier }) {
           className="w-4 h-16 rounded-full"
           style={{ backgroundColor: tier.color }}
         />
+      </div>
+    </section>
+  );
+}
+
+function MirrorSection({ profile }) {
+  // fallback if no data
+  if (!profile || profile.length === 0) {
+    return (
+      <section className="border border-dashed border-[#FF3B30] rounded p-6 space-y-4">
+        <SectionHeading>THE MIRROR</SectionHeading>
+
+        <p className="text-[#FF3B30] font-mono text-sm">
+          No clear profile yet.
+        </p>
+
+        <p className="text-[#666] text-xs leading-relaxed">
+          Ad systems haven’t gathered enough behavioral signals to confidently classify you.
+        </p>
+
+        <p className="text-[#444] text-xs">
+          Browse more sites (shopping, travel, finance, etc.) to reveal how you're being profiled.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="border border-dashed border-[#FF3B30] rounded p-6 space-y-5">
+      <SectionHeading>THE MIRROR</SectionHeading>
+
+      <p className="text-[#888] font-mono text-sm leading-relaxed">
+        Based on your browsing, ad systems may classify you as:
+      </p>
+
+      <div className="flex flex-col gap-4">
+        {profile.map((p) => (
+          <div key={p.label} className="bg-[#111] border border-[#222] rounded p-4 space-y-3">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <span className="text-[#FFE600] font-mono text-sm font-bold">
+                {p.label}
+              </span>
+              <span className="text-[#FF3B30] font-mono text-sm">
+                {p.confidence}%
+              </span>
+            </div>
+
+            {/* Confidence bar */}
+            <div className="w-full bg-[#1A1A1A] h-1 rounded overflow-hidden">
+              <div
+                className="h-full bg-[#FF3B30]"
+                style={{ width: `${p.confidence}%` }}
+              />
+            </div>
+
+            {/* Evidence */}
+            <div>
+              <p className="text-[#666] text-xs">
+                Signals from:
+              </p>
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {p.evidence.map((site) => (
+                  <span
+                    key={site}
+                    className="text-[#999] text-xs font-mono bg-[#1A1A1A] px-2 py-1 rounded border border-[#222]"
+                  >
+                    {site}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Extra punch line (THIS MAKES IT HIT) */}
+            <p className="text-[#444] text-xs mt-2 italic">
+              This is how advertisers may perceive your behavior.
+            </p>
+
+          </div>
+        ))}
       </div>
     </section>
   );
