@@ -1,5 +1,5 @@
 // utils/claude-api.js
-// Fetches a site's privacy policy and summarizes it using Claude.
+// Fetches a site's privacy policy and analyzes it using Claude.
 // Results are cached in chrome.storage.local — the API is never called twice for the same domain.
 
 import { getCachedSummary, saveCachedSummary } from './storage.js';
@@ -9,35 +9,106 @@ const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 const API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
 
-const SYSTEM_PROMPT = `You are a privacy policy analyst. Your job is to read excerpts from website privacy policies and explain them in plain English to everyday users.
+const SYSTEM_PROMPT = `You are a privacy policy analyst for a browser extension.
+
+Your task is to read a website privacy policy excerpt and return a STRICT JSON object only.
+
+Return JSON with exactly these keys:
+{
+  "summary": string,
+  "claimsNoSelling": boolean,
+  "claimsLimitedSharing": boolean,
+  "claimsNoTracking": boolean,
+  "riskScore": number,
+  "plainEnglishTakeaway": string
+}
 
 Rules:
-- Respond with exactly ONE sentence, maximum 25 words
-- Be specific about what data is collected and what happens to it
-- Use plain language — no legal terms
-- If the excerpt doesn't contain enough information, say: "Policy details unclear from available text."
-- Never say "I" or "the policy states" — just state the facts directly
+- Output valid JSON only. No markdown. No code fences.
+- "summary" must be 1 short sentence in plain English.
+- "claimsNoSelling" should be true only if the text explicitly says they do not sell personal data or similar.
+- "claimsLimitedSharing" should be true only if the text explicitly says sharing is limited, restricted, or only with narrow categories of partners.
+- "claimsNoTracking" should be true only if the text explicitly says they do not track users or similar.
+- "riskScore" must be an integer from 0 to 100, where higher means more privacy risk.
+- "plainEnglishTakeaway" must be 1 concise sentence, max 20 words, plain English.
+- If details are unclear, be conservative and use false for booleans.
+- If the excerpt is too vague, still return valid JSON.
 
-Example good responses:
-- "They collect your browsing history, location, and purchase behavior, then sell it to over 40 advertising partners."
-- "They track which pages you visit and share that data with Google and Meta for ad targeting."
-- "They collect your email and usage patterns to send targeted ads and share with third-party analytics firms."`;
+Example output:
+{"summary":"They collect browsing activity and share it with advertising and analytics partners.","claimsNoSelling":false,"claimsLimitedSharing":false,"claimsNoTracking":false,"riskScore":78,"plainEnglishTakeaway":"They gather your activity data and share it with third parties."}`;
 
 /**
- * Get a plain-English summary of a domain's privacy policy.
+ * Safe fallback object when Claude fails or returns malformed output.
+ */
+function getFallbackPolicyIntelligence() {
+  return {
+    summary: 'Policy details unclear from available text.',
+    claimsNoSelling: false,
+    claimsLimitedSharing: false,
+    claimsNoTracking: false,
+    riskScore: 50,
+    plainEnglishTakeaway: 'Privacy practices are unclear from the available policy text.',
+  };
+}
+
+/**
+ * Parse Claude text output into strict structured JSON.
+ */
+function parsePolicyIntelligence(rawText) {
+  try {
+    const parsed = JSON.parse(rawText);
+
+    return {
+      summary:
+        typeof parsed.summary === 'string' && parsed.summary.trim()
+          ? parsed.summary.trim()
+          : 'Policy details unclear from available text.',
+      claimsNoSelling: Boolean(parsed.claimsNoSelling),
+      claimsLimitedSharing: Boolean(parsed.claimsLimitedSharing),
+      claimsNoTracking: Boolean(parsed.claimsNoTracking),
+      riskScore: Number.isFinite(parsed.riskScore)
+        ? Math.max(0, Math.min(100, Math.round(parsed.riskScore)))
+        : 50,
+      plainEnglishTakeaway:
+        typeof parsed.plainEnglishTakeaway === 'string' && parsed.plainEnglishTakeaway.trim()
+          ? parsed.plainEnglishTakeaway.trim()
+          : 'Privacy practices are unclear from the available policy text.',
+    };
+  } catch {
+    return getFallbackPolicyIntelligence();
+  }
+}
+
+/**
+ * Get structured privacy intelligence for a domain.
  * Returns cached result if available. Otherwise fetches policy text and calls Claude.
  *
  * @param {string} domain - e.g. "nytimes.com"
- * @param {string} policyText - raw text from the privacy policy page (max 3000 chars used)
- * @returns {Promise<string>} - one sentence summary
+ * @param {string} policyText - raw text from the privacy policy page (max 4000 chars used)
+ * @returns {Promise<{
+ *   summary: string,
+ *   claimsNoSelling: boolean,
+ *   claimsLimitedSharing: boolean,
+ *   claimsNoTracking: boolean,
+ *   riskScore: number,
+ *   plainEnglishTakeaway: string
+ * }>}
  */
 export async function getPrivacySummary(domain, policyText) {
-  // Check cache first — never call the API twice for the same domain
   const cached = await getCachedSummary(domain);
-  if (cached) return cached;
+  if (cached) {
+    // support old cached string format from previous version
+    if (typeof cached === 'string') {
+      return {
+        ...getFallbackPolicyIntelligence(),
+        summary: cached,
+        plainEnglishTakeaway: cached,
+      };
+    }
+    return cached;
+  }
 
-  // Trim policy text to 3000 chars to stay within token limits
-  const trimmedText = policyText.slice(0, 3000);
+  const trimmedText = policyText.slice(0, 4000);
 
   try {
     const response = await fetch(CLAUDE_API_URL, {
@@ -49,12 +120,12 @@ export async function getPrivacySummary(domain, policyText) {
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 100,
+        max_tokens: 220,
         system: SYSTEM_PROMPT,
         messages: [
           {
             role: 'user',
-            content: `Privacy policy excerpt:\n\n${trimmedText}`,
+            content: `Analyze this privacy policy excerpt and return strict JSON only:\n\n${trimmedText}`,
           },
         ],
       }),
@@ -65,15 +136,15 @@ export async function getPrivacySummary(domain, policyText) {
     }
 
     const data = await response.json();
-    const summary = data.content[0]?.text?.trim() ?? 'Unable to summarize policy.';
+    const rawText = data.content?.[0]?.text?.trim() ?? '';
 
-    // Cache the result so we never call the API again for this domain
-    await saveCachedSummary(domain, summary);
-    return summary;
+    const structured = parsePolicyIntelligence(rawText);
 
+    await saveCachedSummary(domain, structured);
+    return structured;
   } catch (err) {
     console.error('Priceless: Claude API call failed', err);
-    return 'Privacy policy unavailable.';
+    return getFallbackPolicyIntelligence();
   }
 }
 
@@ -99,13 +170,13 @@ export async function fetchPrivacyPolicyText(baseUrl) {
     try {
       const res = await fetch(baseUrl + path, {
         method: 'GET',
-        signal: AbortSignal.timeout(4000), // bail after 4 seconds
+        signal: AbortSignal.timeout(4000),
       });
+
       if (res.ok) {
         const html = await res.text();
-        // Strip HTML tags to get readable plain text
         const plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (plain.length > 200) return plain; // must have meaningful content
+        if (plain.length > 200) return plain;
       }
     } catch {
       // try next path
