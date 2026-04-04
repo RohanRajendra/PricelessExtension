@@ -84,3 +84,46 @@ export async function saveCachedSummary(domain, summary) {
 export async function clearAllData() {
   await chrome.storage.local.clear();
 }
+
+// ===============================
+// BLOCK MODE + SAVINGS STORAGE
+// ===============================
+
+/**
+ * Get whether Block Mode is enabled
+ */
+export async function getBlockMode() {
+  const result = await chrome.storage.local.get("blockModeEnabled");
+  return result.blockModeEnabled || false;
+}
+
+/**
+ * Set Block Mode state (true/false)
+ */
+export async function setBlockMode(enabled) {
+  await chrome.storage.local.set({ blockModeEnabled: enabled });
+}
+
+/**
+ * Get total blocked savings (in dollars)
+ */
+export async function getBlockedSavings() {
+  const result = await chrome.storage.local.get("blockedSavings");
+  return result.blockedSavings || 0;
+}
+
+/**
+ * Increment blocked savings
+ */
+export async function addBlockedSavings(amount) {
+  const current = await getBlockedSavings();
+  const updated = current + amount;
+  await chrome.storage.local.set({ blockedSavings: updated });
+}
+
+/**
+ * Reset blocked savings (optional, useful for testing)
+ */
+export async function resetBlockedSavings() {
+  await chrome.storage.local.set({ blockedSavings: 0 });
+}
