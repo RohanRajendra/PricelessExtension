@@ -1,0 +1,42 @@
+{
+  "domains": {
+    "doubleclick.net": 0.003,
+    "googlesyndication.com": 0.003,
+    "google-analytics.com": 0.0003,
+    "googletagmanager.com": 0.0003,
+    "googleadservices.com": 0.003,
+    "connect.facebook.net": 0.004,
+    "facebook.com": 0.004,
+    "instagram.com": 0.004,
+    "amazon-adsystem.com": 0.002,
+    "criteo.com": 0.0015,
+    "adnxs.com": 0.001,
+    "quantserve.com": 0.0008,
+    "bluekai.com": 0.0008,
+    "demdex.net": 0.0008,
+    "liveramp.com": 0.0008,
+    "acxiom.com": 0.0008,
+    "hotjar.com": 0.0003,
+    "mixpanel.com": 0.0003,
+    "segment.io": 0.0003,
+    "ads-twitter.com": 0.001,
+    "tiktok.com": 0.001,
+    "licdn.com": 0.001,
+    "taboola.com": 0.001,
+    "outbrain.com": 0.001
+  },
+  "categoryDefaults": {
+    "AD_NETWORK": 0.001,
+    "DATA_BROKER": 0.0008,
+    "ANALYTICS": 0.0003,
+    "SOCIAL_PIXEL": 0.001
+  },
+  "parentCompanyMonthlyArpu": {
+    "Google": 4.00,
+    "Meta": 5.00,
+    "Amazon": 2.90,
+    "X (Twitter)": 0.80,
+    "TikTok": 0.90,
+    "LinkedIn": 1.20
+  }
+}
