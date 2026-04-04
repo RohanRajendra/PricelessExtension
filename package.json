@@ -1,6 +1,7 @@
 {
   "name": "priceless",
   "version": "1.0.0",
+  "type": "module",
   "description": "You are the product. Here's your invoice.",
   "scripts": {
     "dev": "vite build --watch",

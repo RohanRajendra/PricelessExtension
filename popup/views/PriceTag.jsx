@@ -23,7 +23,7 @@ export default function PriceTag({ pageData, summary, domain }) {
 
       {/* Hero value */}
       <div className="text-center py-2">
-        <p className="text-[#666] text-xs uppercase tracking-widest mb-1">This page is worth</p>
+        <p className="text-[#666] text-xs uppercase tracking-widest mb-1">YOU ARE THE PRODUCT. PRICE TAG:</p>
         <p className="text-[#FFE600] font-mono font-bold text-5xl leading-none">
           {formatDollarValue(total)}
         </p>

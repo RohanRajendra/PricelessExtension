@@ -7,9 +7,7 @@ import { getCachedSummary, saveCachedSummary } from './storage.js';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
-// IMPORTANT: For the hackathon prototype, the API key is hardcoded here.
-// In production this would never be done — it would live server-side.
-const API_KEY = '__PASTE_API_KEY_HERE__';
+const API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
 
 const SYSTEM_PROMPT = `You are a privacy policy analyst. Your job is to read excerpts from website privacy policies and explain them in plain English to everyday users.
 
