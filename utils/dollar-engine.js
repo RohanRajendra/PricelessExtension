@@ -57,6 +57,86 @@ export function calculatePageValue(events) {
 }
 
 /**
+ * Get annual projection from current month total and elapsed days.
+ *
+ * @param {number} monthTotal
+ * @returns {number}
+ */
+export function getAnnualProjection(monthTotal) {
+  const today = new Date();
+  const elapsedDays = today.getDate(); // 1..31
+  if (!elapsedDays || monthTotal <= 0) return 0;
+
+  const projected = (monthTotal / elapsedDays) * 365;
+  return Math.round(projected * 100) / 100;
+}
+
+/**
+ * Convert a dollar amount into relatable consumer equivalents.
+ *
+ * @param {number} amount
+ * @returns {{
+ *   chatgptMonths: number,
+ *   netflixMonths: number,
+ *   spotifyMonths: number,
+ *   coffeeCups: number
+ * }}
+ */
+export function getConsumerEquivalents(amount) {
+  const benchmarks = {
+    chatgptPlusMonthly: 20,
+    netflixMonthly: 15.49,
+    spotifyMonthly: 11.99,
+    coffee: 5,
+  };
+
+  return {
+    chatgptMonths: Math.floor(amount / benchmarks.chatgptPlusMonthly),
+    netflixMonths: Math.floor(amount / benchmarks.netflixMonthly),
+    spotifyMonths: Math.floor(amount / benchmarks.spotifyMonthly),
+    coffeeCups: Math.floor(amount / benchmarks.coffee),
+  };
+}
+
+/**
+ * Bucket annual extraction into an exposure tier.
+ *
+ * @param {number} annualValue
+ * @returns {{ label: string, description: string, color: string }}
+ */
+export function getExposureTier(annualValue) {
+  if (annualValue < 100) {
+    return {
+      label: 'Low Exposure',
+      description: 'Your current browsing pattern shows relatively limited monetization.',
+      color: '#30D158',
+    };
+  }
+
+  if (annualValue < 300) {
+    return {
+      label: 'Moderate Exposure',
+      description: 'Your browsing behavior is generating meaningful commercial value.',
+      color: '#FFCC00',
+    };
+  }
+
+  if (annualValue < 700) {
+    return {
+      label: 'High Exposure',
+      description: 'Advertisers and brokers are extracting substantial value from your activity.',
+      color: '#FF9500',
+    };
+  }
+
+  return {
+    label: 'Extreme Exposure',
+    description: 'Your browsing pattern is highly monetizable across the ad-tech ecosystem.',
+    color: '#FF3B30',
+  };
+}
+
+/**
  * Calculate the monthly statement — all data needed for the dashboard.
  *
  * @returns {Promise<{
@@ -65,7 +145,19 @@ export function calculatePageValue(events) {
  *   byCategory: { [category: string]: number },
  *   topSites: [{ site: string, value: number }],
  *   totalTrackerEvents: number,
- *   uniqueTrackerDomains: number
+ *   uniqueTrackerDomains: number,
+ *   annualProjection: number,
+ *   consumerEquivalents: {
+ *     chatgptMonths: number,
+ *     netflixMonths: number,
+ *     spotifyMonths: number,
+ *     coffeeCups: number
+ *   },
+ *   exposureTier: {
+ *     label: string,
+ *     description: string,
+ *     color: string
+ *   }
  * }>}
  */
 export async function getMonthlyStatement() {
@@ -81,34 +173,39 @@ export async function getMonthlyStatement() {
     const value = event.estimatedValue ?? 0;
     totalValue += value;
 
-    // By platform (parent company)
     const company = event.parentCompany || 'Other';
     byPlatform[company] = (byPlatform[company] || 0) + value;
 
-    // By category
     const cat = event.category || 'Unknown';
     byCategory[cat] = (byCategory[cat] || 0) + value;
 
-    // By site
     const site = event.parentSite || 'unknown';
     bySite[site] = (bySite[site] || 0) + value;
 
     uniqueDomains.add(event.domain);
   }
 
-  // Top 5 sites by value, sorted descending
+  const roundedTotal = Math.round(totalValue * 10000) / 10000;
+
   const topSites = Object.entries(bySite)
     .map(([site, value]) => ({ site, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
+  const annualProjection = getAnnualProjection(roundedTotal);
+  const consumerEquivalents = getConsumerEquivalents(annualProjection);
+  const exposureTier = getExposureTier(annualProjection);
+
   return {
-    totalValue: Math.round(totalValue * 10000) / 10000,
+    totalValue: roundedTotal,
     byPlatform,
     byCategory,
     topSites,
     totalTrackerEvents: events.length,
     uniqueTrackerDomains: uniqueDomains.size,
+    annualProjection,
+    consumerEquivalents,
+    exposureTier,
   };
 }
 
@@ -159,10 +256,10 @@ export function formatDollarValue(value) {
  */
 export function getCategoryColor(category) {
   const colors = {
-    AD_NETWORK:   '#FF3B30', // red
-    DATA_BROKER:  '#FF9500', // orange
-    ANALYTICS:    '#FFCC00', // yellow
-    SOCIAL_PIXEL: '#30D158', // green
+    AD_NETWORK: '#FF3B30',
+    DATA_BROKER: '#FF9500',
+    ANALYTICS: '#FFCC00',
+    SOCIAL_PIXEL: '#30D158',
   };
   return colors[category] || '#8E8E93';
 }
@@ -175,9 +272,9 @@ export function getCategoryColor(category) {
  */
 export function getCategoryLabel(category) {
   const labels = {
-    AD_NETWORK:   'Ad Network',
-    DATA_BROKER:  'Data Broker',
-    ANALYTICS:    'Analytics',
+    AD_NETWORK: 'Ad Network',
+    DATA_BROKER: 'Data Broker',
+    ANALYTICS: 'Analytics',
     SOCIAL_PIXEL: 'Social Pixel',
   };
   return labels[category] || category;

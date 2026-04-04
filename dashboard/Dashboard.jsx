@@ -38,6 +38,9 @@ export default function Dashboard() {
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-10">
       <DashboardHeader />
       <HeroNumber value={statement.totalValue} />
+      <AnnualProjectionCard annualProjection={statement.annualProjection} />
+      <ConsumerEquivalentsCard equivalents={statement.consumerEquivalents} />
+      <ExposureTierCard tier={statement.exposureTier} />
       <PlatformBreakdown byPlatform={statement.byPlatform} total={statement.totalValue} />
       <CategoryBreakdown byCategory={statement.byCategory} total={statement.totalValue} />
       <TopSites sites={statement.topSites} />
@@ -85,10 +88,76 @@ function HeroNumber({ value }) {
   );
 }
 
+function AnnualProjectionCard({ annualProjection }) {
+  return (
+    <section className="border border-dashed border-[#333] rounded p-6 space-y-3">
+      <SectionHeading>Projected Annual Extraction</SectionHeading>
+      <p className="text-[#F5F5F5] font-mono text-3xl font-bold">
+        {formatDollarValue(annualProjection)}
+      </p>
+      <p className="text-[#888] font-mono text-sm leading-relaxed">
+        At your current browsing pace, companies may extract about{' '}
+        <span className="text-[#FFE600]">{formatDollarValue(annualProjection)}</span> from your data this year.
+      </p>
+    </section>
+  );
+}
+
+function ConsumerEquivalentsCard({ equivalents }) {
+  if (!equivalents) return null;
+
+  const items = [
+    { label: 'ChatGPT Plus months', value: equivalents.chatgptMonths },
+    { label: 'Netflix months', value: equivalents.netflixMonths },
+    { label: 'Spotify months', value: equivalents.spotifyMonths },
+    { label: 'Coffee cups', value: equivalents.coffeeCups },
+  ];
+
+  return (
+    <section className="border border-dashed border-[#333] rounded p-6">
+      <SectionHeading>What Your Data Could Buy</SectionHeading>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        {items.map((item) => (
+          <div key={item.label} className="bg-[#111] rounded border border-[#222] p-4">
+            <p className="text-[#FFE600] font-mono text-2xl font-bold">{item.value}</p>
+            <p className="text-[#777] text-xs uppercase tracking-widest mt-2">{item.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExposureTierCard({ tier }) {
+  if (!tier) return null;
+
+  return (
+    <section className="border border-dashed border-[#333] rounded p-6 space-y-3">
+      <SectionHeading>Exposure Tier</SectionHeading>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p
+            className="font-mono text-2xl font-bold"
+            style={{ color: tier.color }}
+          >
+            {tier.label}
+          </p>
+          <p className="text-[#888] font-mono text-sm mt-2 leading-relaxed">
+            {tier.description}
+          </p>
+        </div>
+        <div
+          className="w-4 h-16 rounded-full"
+          style={{ backgroundColor: tier.color }}
+        />
+      </div>
+    </section>
+  );
+}
+
 function PlatformBreakdown({ byPlatform, total }) {
   if (!byPlatform || total === 0) return null;
 
-  // Sort by value desc, group tail as "Other" after top 6
   const sorted = Object.entries(byPlatform).sort((a, b) => b[1] - a[1]);
   const top = sorted.slice(0, 6);
   const otherValue = sorted.slice(6).reduce((sum, [, v]) => sum + v, 0);
@@ -133,7 +202,6 @@ function CategoryBreakdown({ byCategory, total }) {
   return (
     <section>
       <SectionHeading>By Type</SectionHeading>
-      {/* Stacked bar */}
       <div className="flex h-3 w-full rounded-sm overflow-hidden gap-px mt-4">
         {entries.map(({ cat, pct }) => (
           <div
@@ -143,7 +211,7 @@ function CategoryBreakdown({ byCategory, total }) {
           />
         ))}
       </div>
-      {/* Legend */}
+
       <div className="grid grid-cols-2 gap-2 mt-3">
         {entries.map(({ cat, pct }) => (
           <div key={cat} className="flex items-center gap-2">
@@ -218,7 +286,7 @@ function Stat({ value, label }) {
 function Disclaimer() {
   return (
     <p className="text-[#333] font-mono text-xs pb-8">
-      * Estimates based on IAB ARPU benchmarks.
+      * Estimates based on tracker activity and current benchmark assumptions. Peer comparison is not yet enabled.
     </p>
   );
 }
