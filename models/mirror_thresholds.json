@@ -1,0 +1,22 @@
+{
+  "segments": [
+    "Parent",
+    "Homeowner",
+    "Luxury Auto Intender",
+    "Health Conscious",
+    "Investor",
+    "Traveler",
+    "News Reader",
+    "Tech Enthusiast"
+  ],
+  "thresholds": {
+    "Parent": 0.3,
+    "Homeowner": 0.2,
+    "Luxury Auto Intender": 0.5,
+    "Health Conscious": 0.2,
+    "Investor": 0.2,
+    "Traveler": 0.3,
+    "News Reader": 0.2,
+    "Tech Enthusiast": 0.3
+  }
+}

@@ -40,6 +40,8 @@ export function calculatePageValue(events) {
   };
 
   let total = 0;
+  let totalLow  = 0;
+  let totalHigh = 0;
 
   for (const event of events) {
     const value = event.estimatedValue ?? 0;
@@ -47,10 +49,15 @@ export function calculatePageValue(events) {
     if (byCategory[event.category] !== undefined) {
       byCategory[event.category] += value;
     }
+    // Accumulate confidence interval if available from ONNX model
+    totalLow  += event.estimatedValueLow  ?? value;
+    totalHigh += event.estimatedValueHigh ?? value;
   }
 
   return {
-    total: Math.round(total * 10000) / 10000,
+    total:    Math.round(total     * 10000) / 10000,
+    totalLow: Math.round(totalLow  * 10000) / 10000,
+    totalHigh: Math.round(totalHigh * 10000) / 10000,
     byCategory,
     trackerCount: events.length,
   };
@@ -187,6 +194,16 @@ export async function getMonthlyStatement() {
 
   const roundedTotal = Math.round(totalValue * 10000) / 10000;
 
+  // Aggregate confidence intervals from ONNX model if available
+  let totalLow = 0;
+  let totalHigh = 0;
+  for (const event of events) {
+    totalLow  += event.estimatedValueLow  ?? event.estimatedValue ?? 0;
+    totalHigh += event.estimatedValueHigh ?? event.estimatedValue ?? 0;
+  }
+  totalLow  = Math.round(totalLow  * 10000) / 10000;
+  totalHigh = Math.round(totalHigh * 10000) / 10000;
+
   const topSites = Object.entries(bySite)
     .map(([site, value]) => ({ site, value }))
     .sort((a, b) => b.value - a.value)
@@ -198,6 +215,8 @@ export async function getMonthlyStatement() {
 
   return {
     totalValue: roundedTotal,
+    totalLow,
+    totalHigh,
     byPlatform,
     byCategory,
     topSites,
@@ -245,6 +264,19 @@ export function formatDollarValue(value) {
     return `$${value.toFixed(4)}`;
   }
   return `$${value.toFixed(2)}`;
+}
+
+/**
+ * Format a dollar range for display: "$0.003 – $0.009"
+ * Falls back to single value display if low === high.
+ *
+ * @param {number} low
+ * @param {number} high
+ * @returns {string}
+ */
+export function formatDollarRange(low, high) {
+  if (low === high || !low || !high) return formatDollarValue(low || high || 0);
+  return `${formatDollarValue(low)} – ${formatDollarValue(high)}`;
 }
 
 /**

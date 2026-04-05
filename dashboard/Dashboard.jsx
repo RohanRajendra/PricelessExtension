@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   getMonthlyStatement,
   formatDollarValue,
+  formatDollarRange,
   getCategoryColor,
   getCategoryLabel,
 } from '../utils/dollar-engine.js';
@@ -45,8 +46,8 @@ export default function Dashboard() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-10">
       <DashboardHeader />
-      <HeroNumber value={statement.totalValue} />
-      <AnnualProjectionCard annualProjection={statement.annualProjection} />
+      <HeroNumber value={statement.totalValue} totalLow={statement.totalLow} totalHigh={statement.totalHigh} />
+      <AnnualProjectionCard annualProjection={statement.annualProjection} totalValue={statement.totalValue} totalLow={statement.totalLow} totalHigh={statement.totalHigh} />
       <ConsumerEquivalentsCard equivalents={statement.consumerEquivalents} />
       <ExposureTierCard tier={statement.exposureTier} />
       <MirrorSection profile={profile} />
@@ -76,7 +77,8 @@ function DashboardHeader() {
   );
 }
 
-function HeroNumber({ value }) {
+function HeroNumber({ value, totalLow, totalHigh }) {
+  const hasRange = totalLow != null && totalHigh != null && Math.abs(totalHigh - totalLow) > 0.000001;
   return (
     <div className="border border-dashed border-[#FFE600] rounded p-8 text-center space-y-4">
       <p className="text-[#666] text-sm font-mono uppercase tracking-widest">
@@ -88,6 +90,11 @@ function HeroNumber({ value }) {
       >
         {formatDollarValue(value)}
       </p>
+      {hasRange && (
+        <p className="text-[#555] font-mono text-sm">
+          range: {formatDollarRange(totalLow, totalHigh)}
+        </p>
+      )}
       <p className="text-[#999] text-sm font-mono">
         from your data.{' '}
         <span className="text-white">YOU RECEIVED:</span>{' '}
@@ -97,13 +104,23 @@ function HeroNumber({ value }) {
   );
 }
 
-function AnnualProjectionCard({ annualProjection }) {
+function AnnualProjectionCard({ annualProjection, totalValue, totalLow, totalHigh }) {
+  const hasRange = totalLow != null && totalHigh != null && Math.abs(totalHigh - totalLow) > 0.000001;
+  const scale     = totalValue > 0 ? annualProjection / totalValue : 0;
+  const annualLow  = hasRange ? Math.round(totalLow  * scale * 100) / 100 : null;
+  const annualHigh = hasRange ? Math.round(totalHigh * scale * 100) / 100 : null;
+
   return (
     <section className="border border-dashed border-[#333] rounded p-6 space-y-3">
       <SectionHeading>Projected Annual Extraction</SectionHeading>
       <p className="text-[#F5F5F5] font-mono text-3xl font-bold">
         {formatDollarValue(annualProjection)}
       </p>
+      {hasRange && annualLow != null && annualHigh != null && (
+        <p className="text-[#555] font-mono text-sm">
+          range: {formatDollarRange(annualLow, annualHigh)}
+        </p>
+      )}
       <p className="text-[#888] font-mono text-sm leading-relaxed">
         At your current browsing pace, companies may extract about{' '}
         <span className="text-[#FFE600]">{formatDollarValue(annualProjection)}</span> from your data this year.
@@ -377,7 +394,7 @@ function Stat({ value, label }) {
 function Disclaimer() {
   return (
     <p className="text-[#333] font-mono text-xs pb-8">
-      * Estimates based on tracker activity and current benchmark assumptions. Peer comparison is not yet enabled.
+      * Estimates based on tracker activity and current benchmark assumptions.
     </p>
   );
 }

@@ -2,10 +2,13 @@
 // Itemized view — every tracker on this page as a receipt line item.
 // Props: { events: TrackerEvent[], value: { total, byCategory, trackerCount } }
 
-import { formatDollarValue, getCategoryColor, getCategoryLabel } from '../../utils/dollar-engine.js';
+import { formatDollarValue, formatDollarRange, getCategoryColor, getCategoryLabel } from '../../utils/dollar-engine.js';
 
 export default function Receipt({ events, value }) {
-  const total = value?.total ?? 0;
+  const total     = value?.total     ?? 0;
+  const totalLow  = value?.totalLow  ?? null;
+  const totalHigh = value?.totalHigh ?? null;
+  const hasRange  = totalLow != null && totalHigh != null && Math.abs(totalHigh - totalLow) > 0.000001;
 
   // Sort by highest value first
   const sorted = [...events].sort((a, b) => (b.estimatedValue ?? 0) - (a.estimatedValue ?? 0));
@@ -46,14 +49,21 @@ export default function Receipt({ events, value }) {
             <span className="text-[#F5F5F5] font-mono font-bold text-sm uppercase tracking-wider">
               Total
             </span>
-            <span className="text-[#FFE600] font-mono font-bold text-sm">
-              {formatDollarValue(total)}
-            </span>
+            <div className="text-right">
+              <span className="text-[#FFE600] font-mono font-bold text-sm block">
+                {formatDollarValue(total)}
+              </span>
+              {hasRange && (
+                <span className="text-[#555] font-mono text-[10px] block mt-0.5">
+                  {formatDollarRange(totalLow, totalHigh)}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* IAB disclaimer */}
+          {/* disclaimer */}
           <p className="text-[#444] font-mono text-[10px] mt-3 leading-relaxed">
-            * Estimate based on IAB ARPU benchmarks.
+            * ML-estimated range based on page context and tracker density.
           </p>
         </>
       )}
@@ -80,9 +90,16 @@ function LineItem({ event }) {
             {event.parentCompany} · <span style={{ color }}>{label.toUpperCase()}</span>
           </span>
         </div>
-        <span className="text-[#999] font-mono text-xs">
-          {formatDollarValue(event.estimatedValue ?? 0)}
-        </span>
+        <div className="text-right">
+          <span className="text-[#999] font-mono text-xs block">
+            {formatDollarValue(event.estimatedValue ?? 0)}
+          </span>
+          {event.estimatedValueLow != null && event.estimatedValueHigh != null && (
+            <span className="text-[#555] font-mono text-[10px] block">
+              {formatDollarRange(event.estimatedValueLow, event.estimatedValueHigh)}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

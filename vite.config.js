@@ -12,6 +12,11 @@ export default defineConfig({
         { src: 'manifest.json', dest: '.' },
         { src: 'data', dest: '.' },
         { src: 'icons', dest: '.' },
+        // onnxruntime-web WASM binary — must live at extension root for chrome.runtime.getURL()
+        {
+          src: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
+          dest: '.',
+        },
       ],
     }),
   ],

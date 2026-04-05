@@ -1,0 +1,32 @@
+{
+  "page_categories": [
+    "entertainment",
+    "finance",
+    "health",
+    "news",
+    "other",
+    "shopping",
+    "tech",
+    "travel"
+  ],
+  "feature_order": [
+    "cat_entertainment",
+    "cat_finance",
+    "cat_health",
+    "cat_news",
+    "cat_other",
+    "cat_shopping",
+    "cat_tech",
+    "cat_travel",
+    "hour_sin",
+    "hour_cos",
+    "is_mobile",
+    "has_geo_signal",
+    "tracker_density",
+    "ad_network_count",
+    "data_broker_count",
+    "analytics_count",
+    "social_pixel_count"
+  ],
+  "n_features": 17
+}

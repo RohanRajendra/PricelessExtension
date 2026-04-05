@@ -12,6 +12,7 @@ export default function App() {
   const [currentDomain, setCurrentDomain] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [contradictions, setContradictions] = useState([]);
   const [blockModeEnabled, setBlockModeEnabled] = useState(false);
   const [blockedSavings, setBlockedSavings] = useState(0);
   const [toggleLoading, setToggleLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function App() {
 
       setPageData(response?.pageData ?? null);
       setSummary(response?.summary ?? null);
+      setContradictions(response?.contradictions ?? []);
       setBlockModeEnabled(Boolean(response?.blockModeEnabled));
       setBlockedSavings(Number(response?.blockedSavings ?? 0));
     } catch (error) {
@@ -109,6 +111,7 @@ export default function App() {
           <PriceTag
             pageData={pageData}
             summary={summary}
+            contradictions={contradictions}
             domain={currentDomain}
           />
         ) : (

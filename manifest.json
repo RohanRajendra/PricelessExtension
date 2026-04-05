@@ -35,11 +35,22 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["data/trackers.json", "data/tracker-values.json"],
+      "resources": [
+        "data/trackers.json",
+        "data/tracker-values.json",
+        "data/valuation.onnx",
+        "data/mirror.onnx",
+        "data/mirror_lsa.json",
+        "data/mirror_vocab.json",
+        "data/mirror_thresholds.json",
+        "data/valuation_scaler.json",
+        "data/valuation_categories.json",
+        "ort-wasm-simd-threaded.wasm"
+      ],
       "matches": ["<all_urls>"]
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   }
 }

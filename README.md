@@ -1,7 +1,10 @@
-# PricelessExtension
-It's a browser extension that puts a real dollar figure on your data in real time, shows you the receipt you were never meant to see, and gives you the dial to decide how much of yourself you're willing to sell. 
+# Priceless
 
-### *"They've known your price for years. Now you do too."*
+> **You are the product. Here's your invoice.**
+
+A Chrome extension that puts a real dollar figure on your data in real time, shows you the receipt you were never meant to see, exposes what your privacy policy actually does, and reconstructs the audience profile advertisers have built on you.
+
+*Built for SharkHack 2026 — Code Against the Machine*
 
 ---
 
@@ -9,155 +12,94 @@ It's a browser extension that puts a real dollar figure on your data in real tim
 
 Every time you open a browser, you walk into a marketplace. You are not the customer. You are the product — packaged, priced, and sold to the highest bidder before the page even finishes loading.
 
-Ad networks, data brokers, and surveillance platforms have spent decades building an economy around your behavior. They know exactly what you're worth. They've assigned you a price. They buy and sell you every single day.
+Ad networks, data brokers, and surveillance platforms have spent decades building an economy around your behavior. They know exactly what you're worth. They've assigned you a price. They buy and sell access to you every single day.
 
 And they never told you.
 
 Privacy tools today either block trackers silently or bury you in technical warnings. None of them answer the one question that actually makes people feel something:
 
 > **How much am I worth to them?**
-> 
 
 ---
 
-## What Is Priceless?
+## Features
 
-Priceless is a browser extension that puts a price tag on the product — **you**.
+### Your Price Tag
+The centerpiece. A real-time dollar figure as you browse — your estimated worth to the ad economy on this page, today, this month. Not a score. Not a warning. A number with a dollar sign and a running total.
 
-It doesn't block. It doesn't hide. It tears open the black box of surveillance capitalism and shows you the receipt you were never meant to see. Every site you visit. Every tracker that fires. Every ad network that profiles you. Translated into plain language and a real dollar figure — running in real time, right in your browser.
+### The Receipt
+Every tracker on every page, itemized like a bill. Domain, parent company, category (Ad Network / Data Broker / Analytics / Social Pixel), and estimated value extracted. Sorted by highest value first. The invoice they never sent you.
 
-You've always been the product. Now you know the price.
+### The Monthly Statement
+A full-screen dashboard showing your month-to-date extraction:
+- **Total value extracted** with ML confidence interval range
+- **Projected annual extraction** scaled from your current browsing pace
+- **By platform** — Google, Meta, Amazon, and the rest, with bar chart
+- **By type** — segmented color bar across tracker categories
+- **Top sites that sold you** — your personal leaderboard of shame
+- **Consumer equivalents** — translates your data value into ChatGPT months, Netflix subscriptions, coffee cups
+- **Exposure tier** — Low / Moderate / High / Extreme, based on annualized extraction
 
-And once you know the price, **you decide how much of yourself you're willing to sell.**
+### The Mirror
+Reconstructs the audience profile ad systems have built on you from your browsing history — without sending your data anywhere. Shows confidence scores and the sites that produced each signal.
 
----
+> *"Based on your browsing, ad systems may classify you as: Luxury Shopper (84%) · Tech Enthusiast (71%)"*
 
-## How It Works
+### AI Policy Intelligence
+Claude reads the site's privacy policy so you don't have to, then cross-references it against what's actually happening:
 
-1. **You browse normally.** Priceless runs silently in the background.
-2. **On every page**, it detects which third-party trackers fired, what data categories were collected, and which ad networks are profiling you.
-3. **It assigns you a dollar value** based on known industry ARPU figures (Google, Meta, Amazon, etc.) and IAB ad market benchmarks — the same data these companies use to buy and sell you.
-4. **You see a receipt** — not a warning, not a score. A receipt. Itemized. Running total. Month to date.
-5. **You choose your response.** Priceless offers graduated suggestions for reducing your footprint — not a kill switch, but a dial. You decide how much of yourself you're willing to give away.
+- **Plain English summary** — one sentence, no legalese
+- **Contradiction alerts** — flags when a policy claims "we don't track you" while ad network trackers are actively firing on the page
+- **Policy change detection** — hashes the policy text on every visit; alerts you when it changes and summarizes what got worse
+- **Consent theater scoring** — detects dark patterns in cookie consent banners (pre-ticked boxes, buried reject options, fake "legitimate interest" flows) and scores them 0–100
 
----
-
-## Core Features
-
-### 🏷️ Your Price Tag
-
-The centerpiece. A real-time dollar value displayed as you browse — your estimated worth to the ad economy on this page, this session, this month. Not abstract. Not a percentage. A number with a dollar sign.
-
-*"You are worth $0.003 to Google right now."*
-
-### 🧾 The Receipt
-
-Per-site breakdown on every page visit:
-
-- Which trackers fired (Ad Networks, Data Brokers, Analytics, Social Pixels)
-- What data categories were collected (location, browsing behavior, purchase intent, demographics)
-- Estimated dollar value extracted from this visit
-
-### 📊 The Monthly Statement
-
-A dashboard showing your running total for the month:
-
-- Broken down by platform: Google, Meta, Amazon, TikTok, and more
-- Headline figure: *"This month, these companies made an estimated $47 from your data. You received $0."*
-- The moment people screenshot. The moment people feel it.
-
-### 📢 The Leaderboard of Shame *(stretch)*
-
-A shareable graphic of your week's top data harvesters. Built to be screenshotted and posted. *"Google made $31 off me this week. Here's my receipt."* 
-
-### 📄 Plain English Policy *(stretch)*
-
-LLM-powered one-line summary of what a site actually claims to collect — pulled from their privacy policy, stripped of legalese.
-
-*"They collect: your search history, precise location, and purchase behavior. They sell it to 47 partners."*
-
----
-
-## Differentiation — Why Priceless Wins
-
-| Tool | What It Does | What It Doesn't Do |
-| --- | --- | --- |
-| **Privacy Badger** | Blocks trackers algorithmically | Silent. No financial framing. Doesn't show you what you're worth. |
-| **uBlock Origin** | Blocks ads and trackers via lists | Binary. No dollar value. No user agency over the spectrum. |
-| **Ghostery** | Shows trackers, some blocking | Technical, not emotional. No price tag. No graduated control. |
-| **Extension Auditor Pro** | Audits installed extensions for risk | B2B/IT tool. Not consumer-facing. No receipts. |
-| **Data broker opt-out tools** | Helps you request data deletion | Reactive, not real-time. No visibility into daily extraction. |
-
-### Priceless's Unfair Advantages
-
-**1. We put a price tag on you.**
-Every existing tool speaks in trackers, cookies, and risk scores. Nobody feels anything reading that. A dollar figure is visceral. It reframes surveillance capitalism as a transaction — one where you never agreed to the price and never saw the invoice. Priceless makes it impossible to ignore.
-
-**2. You are the product. We make that literal.**
-The entire pitch of modern surveillance capitalism is that the service is free. Priceless exposes the lie: the service was never free. You were always paying — with yourself. We just show you the receipt.
-
-**3. It's a mirror, not just a blocker.**
-The punk move isn't only to fight the system — it's to make the system's extraction visible and embarrassing. But we go one step further: we hand you the dial. You choose how visible you want to be. Total awareness, partial resistance, or full ghost mode. That's real autonomy.
-
-**4. It's built to go viral.**
-The Monthly Statement and Leaderboard of Shame are designed to be screenshotted and shared. *"Google made $47 off me this month"* is a tweet. *"I installed a tracker blocker"* is not.
-
-**5. No server. No irony.**
-Priceless stores everything locally. Zero data leaves your device. We are not going to harvest your data to explain who's harvesting your data. That would make us the villain of our own story.
+### Block Mode
+One toggle. Switches Chrome's `declarativeNetRequest` rules to block all known tracker domains. Shows you how much value you've denied the ad economy since enabling it.
 
 ---
 
 ## Tech Stack
 
-### Browser Extension
-
-- **Manifest V3** Chrome Extension (content scripts + background service worker)
-- **React** for the popup UI
-- **Tailwind CSS** for styling
+### Extension Architecture
+- **Chrome Manifest V3** — content scripts, background service worker, `declarativeNetRequest`
+- **React + Tailwind CSS** — popup and dashboard UI
+- **Vite** — build system with static asset copying for WASM and model files
 
 ### Tracker Detection
+- **WhoTracksMe dataset** — open-source tracker registry with parent company mappings
+- Custom categorization: Ad Networks, Data Brokers, Analytics, Social Pixels
+- `PerformanceObserver` + resource timing for MV3-compatible detection (no webRequest)
 
-- **Disconnect.me tracker list** — open source, comprehensive, no API needed
-- **EasyPrivacy list** — supplementary tracker data
-- Trackers categorized into: Ad Networks, Data Brokers, Analytics, Social Pixels
+### ML-Powered Valuation (ONNX, runs locally)
+- **PyTorch regression model** trained on WhoTracksMe tracker density data + IAB CPM benchmarks
+- 17 input features: page category (8-class OHE), time-of-day cyclical encoding, device type, geo signal, tracker type counts
+- Outputs a **confidence interval** (low / mid / high) per tracker event
+- Exported to ONNX and runs entirely in the service worker via **ONNX Runtime Web (WASM)**
+- Static `tracker-values.json` fallback when model inference fails
 
-### Dollar Value Estimation
+### ML-Powered Profile Reconstruction (ONNX, runs locally)
+- **PyTorch multi-label classifier** trained on 1.27M URL samples (Curlie dataset + synthetic URLs)
+- URL tokenization → Bag-of-Words → **LSA (TruncatedSVD)** dimensionality reduction → 64-dim vector
+- 8 output segments mapped from IAB Content Taxonomy 3.1: Luxury Shopper, Tech Enthusiast, News Reader, Health & Wellness, Finance-Minded, Travel Planner, Entertainment Fan, Sports Fan
+- Weighted BCE loss to handle class imbalance; per-class confidence thresholds
+- Keyword-matching fallback preserved for low-signal sessions
 
-- Based on publicly available **IAB ad market benchmarks** and platform **ARPU figures**
-    - Google: ~$48/user/year → ~$4/month
-    - Meta: ~$60/user/year → ~$5/month
-    - Estimates scaled by session length, page category, and tracker density
-- Transparent about being estimates — and the estimate alone is damning enough
+### AI Policy Intelligence
+- **Claude API** (`claude-sonnet-4`) — privacy policy analysis with structured JSON output
+- **SHA-256 hash** (Web Crypto API) of policy text for change detection across visits
+- DOM-based consent theater scorer runs in the content script before policy fetch
+- Fully cached in `chrome.storage.local` — Claude is only called when policy changes or on first visit
 
-### The Dial (Graduated Blocking)
-
-- Chrome's `declarativeNetRequest` API for rule-based blocking
-- Four preset rule sets mapped to the four levels (Witness → Ghost)
-- User's level stored locally, never synced
-
-### Optional AI Layer *(stretch)*
-
-- **Claude API** — plain English privacy policy summarizer
-- One sentence. No legalese.
-
-### Data Storage
-
-- All data stored locally via Chrome's `storage.local` API
-- **Zero data sent to any server. Ever.**
-
----
-
-## The Pitch — One Paragraph
-
-> For decades, surveillance capitalism has had a dirty secret: you are not the user, you are the product. Every search, every scroll, every click has been packaged and sold — and they've always known your price. Priceless tears that open. It's a browser extension that puts a real dollar figure on your data in real time, shows you the receipt you were never meant to see, and gives you the dial to decide how much of yourself you're willing to sell. Not a blocker. Not a warning. A reckoning.
-> 
+### Storage
+- **`chrome.storage.local`** — all tracker events, model outputs, policy cache, and user settings
+- **Zero data leaves the device.** No analytics. No sync. No server.
 
 ---
 
-## SharkHack Track Alignment
+## The Pitch
 
-**Off-Grid** — Privacy, security, and digital autonomy. Priceless is a direct confrontation with the invisible economy built on personal data. It doesn't just highlight the right to privacy — it prices what's being taken, and hands the control back to you.
+For decades, surveillance capitalism has had a dirty secret: you are not the user, you are the product. Every search, every scroll, every click has been packaged and sold — and they've always known your price. Priceless tears that open. It's a browser extension that puts a real dollar figure on your data in real time, shows you the receipt you were never meant to see, reconstructs the audience profile built on your browsing history, and catches sites lying about what they do with your data. Not a blocker. Not a warning. A reckoning.
 
 ---
 
-*Built for SharkHack 2026 — Code Against the Machine*
+*SharkHack 2026 · Off-Grid Track · Privacy, security, and digital autonomy*

@@ -86,6 +86,40 @@ export async function clearAllData() {
 }
 
 // ===============================
+// POLICY CHANGE DETECTION STORAGE
+// ===============================
+
+/**
+ * Get the stored SHA-256 hash of a domain's privacy policy text, or null.
+ */
+export async function getPolicyHash(domain) {
+  const result = await chrome.storage.local.get(`policy_hash_${domain}`);
+  return result[`policy_hash_${domain}`] || null;
+}
+
+/**
+ * Save the SHA-256 hash of a domain's privacy policy text.
+ */
+export async function savePolicyHash(domain, hash) {
+  await chrome.storage.local.set({ [`policy_hash_${domain}`]: hash });
+}
+
+/**
+ * Get the stored plain-English summary text for a domain (used as "before" context on change).
+ */
+export async function getPolicySummaryText(domain) {
+  const result = await chrome.storage.local.get(`policy_text_${domain}`);
+  return result[`policy_text_${domain}`] || null;
+}
+
+/**
+ * Save the plain-English summary text for a domain.
+ */
+export async function savePolicySummaryText(domain, text) {
+  await chrome.storage.local.set({ [`policy_text_${domain}`]: text });
+}
+
+// ===============================
 // BLOCK MODE + SAVINGS STORAGE
 // ===============================
 

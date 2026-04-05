@@ -1,52 +1,23 @@
 // utils/profile-engine.js
-// Rule-based behavioral profile reconstruction ("The Mirror")
+// Behavioral profile reconstruction ("The Mirror" feature).
+// Delegates to ONNX mirror model; falls back to keyword matching if model fails.
 
 import { getEventsForCurrentMonth } from './storage.js';
+import { classifyBrowsingHistory } from './mirror-model.js';
 
-/**
- * Define audience segments + signals
- */
+// Keyword fallback — used when ONNX inference fails
 const SEGMENTS = {
-  Parent: {
-    keywords: ['baby', 'parent', 'kids', 'school', 'family'],
-    weight: 1.2,
-  },
-  Homeowner: {
-    keywords: ['zillow', 'realestate', 'mortgage', 'home', 'rent', 'apartments'],
-    weight: 1.3,
-  },
-  'Luxury Auto Intender': {
-    keywords: ['bmw', 'mercedes', 'audi', 'tesla', 'car', 'auto'],
-    weight: 1.1,
-  },
-  'Health Conscious': {
-    keywords: ['fitness', 'health', 'nutrition', 'gym', 'wellness'],
-    weight: 1.0,
-  },
-  Investor: {
-    keywords: ['stocks', 'crypto', 'invest', 'finance', 'trading'],
-    weight: 1.2,
-  },
-  Traveler: {
-    keywords: ['flight', 'hotel', 'booking', 'airbnb', 'travel'],
-    weight: 1.1,
-  },
-  'News Reader': {
-    keywords: ['cnn', 'bbc', 'news', 'nytimes', 'washingtonpost', 'reuters'],
-    weight: 0.9,
-  },
-  'Tech Enthusiast': {
-    keywords: ['tech', 'github', 'verge', 'wired', 'android', 'apple'],
-    weight: 1.0,
-  },
+  Parent:                 { keywords: ['baby', 'parent', 'kids', 'school', 'family'], weight: 1.2 },
+  Homeowner:              { keywords: ['zillow', 'realestate', 'mortgage', 'home', 'rent', 'apartments'], weight: 1.3 },
+  'Luxury Auto Intender': { keywords: ['bmw', 'mercedes', 'audi', 'tesla', 'car', 'auto'], weight: 1.1 },
+  'Health Conscious':     { keywords: ['fitness', 'health', 'nutrition', 'gym', 'wellness'], weight: 1.0 },
+  Investor:               { keywords: ['stocks', 'crypto', 'invest', 'finance', 'trading'], weight: 1.2 },
+  Traveler:               { keywords: ['flight', 'hotel', 'booking', 'airbnb', 'travel'], weight: 1.1 },
+  'News Reader':          { keywords: ['cnn', 'bbc', 'news', 'nytimes', 'washingtonpost', 'reuters'], weight: 0.9 },
+  'Tech Enthusiast':      { keywords: ['tech', 'github', 'verge', 'wired', 'android', 'apple'], weight: 1.0 },
 };
 
-/**
- * Build behavioral profile from browsing data
- */
-export async function buildBehaviorProfile() {
-  const events = await getEventsForCurrentMonth();
-
+function keywordFallback(events) {
   const siteCounts = {};
   for (const e of events) {
     const site = e.parentSite || '';
@@ -55,50 +26,49 @@ export async function buildBehaviorProfile() {
   }
 
   const results = [];
-
   for (const [label, config] of Object.entries(SEGMENTS)) {
     let score = 0;
     const evidence = [];
-
     for (const [site, count] of Object.entries(siteCounts)) {
       const lower = site.toLowerCase();
-
-      for (const keyword of config.keywords) {
-        if (lower.includes(keyword)) {
-          score += count * config.weight;
-          evidence.push(site);
-          break;
-        }
+      if (config.keywords.some(kw => lower.includes(kw))) {
+        score += count * config.weight;
+        evidence.push(site);
       }
     }
-
     if (score > 0) {
-      const confidence = Math.min(95, Math.max(55, Math.round(score * 10)));
-
       results.push({
         label,
-        confidence,
-        evidence: [...new Set(evidence)].slice(0, 3),
+        confidence: Math.min(95, Math.max(55, Math.round(score * 10))),
+        evidence:   [...new Set(evidence)].slice(0, 3),
       });
     }
   }
 
-  const finalResults = results
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 4);
-
-  // Fallback so The Mirror always shows something useful
-  if (finalResults.length === 0) {
-    const fallbackSites = Object.keys(siteCounts).slice(0, 3);
-
-    return [
-      {
-        label: 'General Web User',
-        confidence: 60,
-        evidence: fallbackSites.length > 0 ? fallbackSites : ['Browsing history still too sparse'],
-      },
-    ];
+  const sorted = results.sort((a, b) => b.confidence - a.confidence).slice(0, 4);
+  if (sorted.length === 0) {
+    return [{
+      label:      'General Web User',
+      confidence: 60,
+      evidence:   Object.keys(siteCounts).slice(0, 3),
+    }];
   }
+  return sorted;
+}
 
-  return finalResults;
+/**
+ * Build behavioral profile from browsing history.
+ * Tries ONNX model first; falls back to keyword matching.
+ *
+ * @returns {Promise<Array<{ label: string, confidence: number, evidence: string[] }>>}
+ */
+export async function buildBehaviorProfile() {
+  const events = await getEventsForCurrentMonth();
+
+  // Try ONNX model
+  const modelResult = await classifyBrowsingHistory(events);
+  if (modelResult && modelResult.length > 0) return modelResult;
+
+  // Keyword fallback
+  return keywordFallback(events);
 }
